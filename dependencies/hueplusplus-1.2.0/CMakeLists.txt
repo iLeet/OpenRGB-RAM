@@ -1,10 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2...3.28)
 
-# Explicitly define the root project directory
-set(PROJECT_ROOT_DIR "${CMAKE_SOURCE_DIR}/..")  # Assuming this CMakeLists.txt is inside 'hueplusplus'
-
 # Add cmake dir to module path, so Find*.cmake can be found
-set(CMAKE_MODULE_PATH "${PROJECT_ROOT_DIR}/dependencies/cmake" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/dependencies/cmake" ${CMAKE_MODULE_PATH})
 
 project(hueplusplus VERSION 1.2.0 LANGUAGES CXX)
 
@@ -43,7 +40,7 @@ endif()
 
 # update submodules
 find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${PROJECT_ROOT_DIR}/.git")
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     option(GIT_SUBMODULE "Check submodules during build" ON)
     if(GIT_SUBMODULE AND NEED_SUBMODULES)
         message(STATUS "Submodule update")
@@ -76,7 +73,7 @@ set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH "Installation director
 # target for uninstall
 if(NOT TARGET uninstall)
     configure_file(
-        "${PROJECT_ROOT_DIR}/dependencies/cmake/cmake_uninstall.cmake.in"
+        "${PROJECT_SOURCE_DIR}/dependencies/cmake/cmake_uninstall.cmake.in"
         "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake"
         IMMEDIATE @ONLY)
 
@@ -89,13 +86,16 @@ if (1 AND APPLE)
     set(CMAKE_MACOSX_RPATH 1)
 endif()
 
-# Correct the dependency paths here using the PROJECT_ROOT_DIR
+# Define the ROOT_DIR for the actual root of the project
+set(ROOT_DIR "${PROJECT_SOURCE_DIR}/../..")
+
+# Corrected paths to the dependencies
 if(NOT MbedTLS_FOUND)
     # Build mbedtls if not installed
     message(STATUS "MbedTLS was not found, the submodule is used.")
     set(USE_STATIC_MBEDTLS_LIBRARY ON)
     set(USE_SHARED_MBEDTLS_LIBRARY OFF)
-    add_subdirectory("${PROJECT_ROOT_DIR}/dependencies/mbedtls-3.2.1" EXCLUDE_FROM_ALL)
+    add_subdirectory("${ROOT_DIR}/dependencies/mbedtls-3.2.1" EXCLUDE_FROM_ALL)
 
     # Compile the mbedtls library as a static with position independent code,
     # because we need it for both a shared and static library
@@ -111,11 +111,12 @@ if(NOT MbedTLS_FOUND)
     endif()
 endif()
 
-# Correct path for json (directly in dependencies, not inside hueplusplus subfolder)
 if(NOT nlohmann_json_FOUND)
-    message(STATUS "nlohmann_json was not found, using embedded json from dependencies.")
+    # Use embedded json
+    message(STATUS "nlohmann_json was not found, the submodule is used.")
+    # disable tests for json
     set(JSON_BuildTests OFF CACHE INTERNAL "")
-    add_subdirectory("${PROJECT_ROOT_DIR}/dependencies/json/nlohmann" EXCLUDE_FROM_ALL)
+    add_subdirectory("${ROOT_DIR}/dependencies/json/nlohmann" EXCLUDE_FROM_ALL)
 endif()
 
 add_subdirectory(src)
