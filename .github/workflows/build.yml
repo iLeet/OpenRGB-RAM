@@ -30,14 +30,14 @@ jobs:
 
       - name: Configure and build OpenRGB-RAM
         run: |
-          cd ${{ github.workspace }}  # Start in the root directory
+          cd ${{ github.workspace }}/OpenRGB-RAM  # Navigate to the root OpenRGB-RAM directory
           mkdir build
           cd build
-          cmake -G "MinGW Makefiles" ..  # Assuming OpenRGB-RAM source is in root
+          cmake -G "MinGW Makefiles" ../dependencies/hueplusplus-1.2.0  # Point to correct CMakeLists.txt in the submodule directory
           mingw32-make -j4
 
       - name: Upload compiled OpenRGB-RAM
         uses: actions/upload-artifact@v4
         with:
           name: OpenRGB-RAM-Windows
-          path: ${{ github.workspace }}/build/OpenRGB.exe
+          path: ${{ github.workspace }}/OpenRGB-RAM/build/OpenRGB.exe
