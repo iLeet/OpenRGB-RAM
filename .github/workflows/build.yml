@@ -7,15 +7,18 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Allows manual runs
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest  # Use Windows runner
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout source code
+      - name: Checkout source code (with submodules)
         uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
 
       - name: Install dependencies
         run: |
@@ -27,6 +30,7 @@ jobs:
 
       - name: Configure and build OpenRGB
         run: |
+          cd OpenRGB  # Make sure we're in the correct folder
           mkdir build
           cd build
           cmake -G "MinGW Makefiles" ..
@@ -36,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: OpenRGB-Windows
-          path: build/OpenRGB.exe
+          path: OpenRGB/build/OpenRGB.exe
