@@ -1,4 +1,4 @@
-name: Build OpenRGB (Windows)
+name: Build OpenRGB for Windows
 
 on:
   push:
@@ -7,37 +7,54 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:  # Allows manual runs
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout source code (with submodules)
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 1
+    # Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-          choco install ninja
-          choco install mingw
-          choco install qt5-default
-          choco install git
+    # Set up MinGW
+    - name: Set up MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
 
-      - name: Configure and build OpenRGB
-        run: |
-          cd OpenRGB  # Make sure we're in the correct folder
-          mkdir build
-          cd build
-          cmake -G "MinGW Makefiles" ../dependencies/hueplusplus-1.2.0
-          mingw32-make -j4
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        pacman -S --noconfirm mingw-w64-x86_64-cmake
+        pacman -S --noconfirm mingw-w64-x86_64-make
+        pacman -S --noconfirm mingw-w64-x86_64-gcc
 
-      - name: Upload compiled OpenRGB
-        uses: actions/upload-artifact@v4
-        with:
-          name: OpenRGB-Windows
-          path: OpenRGB/build/OpenRGB.exe
+    # Clone OpenRGB repository
+    - name: Clone OpenRGB repository
+      run: |
+        git clone https://github.com/CalcProgrammer1/OpenRGB.git
+        cd OpenRGB
+        git submodule update --init --recursive
+
+    # Configure and build OpenRGB
+    - name: Configure and build OpenRGB
+      run: |
+        cd OpenRGB-RAM
+        mkdir build
+        cd build
+        cmake -G "MinGW Makefiles" ../dependencies/hueplusplus-1.2.0
+        mingw32-make -j4
+
+    # Run tests or build validation (optional)
+    - name: Validate build
+      run: |
+        cd OpenRGB-RAM/build
+        ./OpenRGB.exe --version
+
+    # Upload artifact (optional)
+    - name: Upload OpenRGB build artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: OpenRGB-Build
+        path: OpenRGB-RAM/build/OpenRGB.exe
