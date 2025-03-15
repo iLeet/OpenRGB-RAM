@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2...3.28)
 
 # Add cmake dir to module path, so Find*.cmake can be found
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/dependencies/cmake" ${CMAKE_MODULE_PATH})
 
 project(hueplusplus VERSION 1.2.0 LANGUAGES CXX)
 
@@ -73,7 +73,7 @@ set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH "Installation director
 # target for uninstall
 if(NOT TARGET uninstall)
     configure_file(
-        "${PROJECT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+        "${PROJECT_SOURCE_DIR}/dependencies/cmake/cmake_uninstall.cmake.in"
         "${PROJECT_BINARY_DIR}/cmake_uninstall.cmake"
         IMMEDIATE @ONLY)
 
@@ -86,7 +86,7 @@ if (1 AND APPLE)
     set(CMAKE_MACOSX_RPATH 1)
 endif()
 
-# Handle MbedTLS dependency
+# Corrected paths to the dependencies (since CMake is within the dependencies folder)
 if(NOT MbedTLS_FOUND)
     # Build mbedtls if not installed
     message(STATUS "MbedTLS was not found, the submodule is used.")
@@ -108,7 +108,6 @@ if(NOT MbedTLS_FOUND)
     endif()
 endif()
 
-# Handle nlohmann_json dependency
 if(NOT nlohmann_json_FOUND)
     # Use embedded json
     message(STATUS "nlohmann_json was not found, the submodule is used.")
@@ -117,7 +116,6 @@ if(NOT nlohmann_json_FOUND)
     add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/json/nlohmann" EXCLUDE_FROM_ALL)
 endif()
 
-# Add source files
 add_subdirectory(src)
 
 # if the user decided to use tests add the subdirectory
@@ -125,7 +123,6 @@ if(hueplusplus_TESTS)
     add_subdirectory("test")
 endif()
 
-# if the user decided to use examples add the subdirectory
 if(hueplusplus_EXAMPLES)
     add_subdirectory("examples")
 endif()
