@@ -113,6 +113,7 @@ if(NOT nlohmann_json_FOUND)
     message(STATUS "nlohmann_json was not found, the submodule is used.")
     # disable tests for json
     set(JSON_BuildTests OFF CACHE INTERNAL "")
+    # Corrected path for json (no hueplusplus subfolder)
     add_subdirectory("${PROJECT_SOURCE_DIR}/dependencies/json/nlohmann" EXCLUDE_FROM_ALL)
 endif()
 
