@@ -1,0 +1,36 @@
+name: Build OpenRGB
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual runs
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake g++ qtbase5-dev qtchooser qt5-qmake qttools5-dev-tools libusb-1.0-0-dev
+
+      - name: Configure and build OpenRGB
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+
+      - name: Upload compiled OpenRGB
+        uses: actions/upload-artifact@v3
+        with:
+          name: OpenRGB-Build
+          path: build/OpenRGB
