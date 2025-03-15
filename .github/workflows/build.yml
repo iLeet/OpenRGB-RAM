@@ -28,6 +28,10 @@ jobs:
           choco install qt5-default
           choco install git
 
+      - name: Initialize and update submodules
+        run: |
+          git submodule update --init --recursive
+
       - name: Configure and build OpenRGB-RAM
         run: |
           mkdir build
