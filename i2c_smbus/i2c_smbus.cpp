@@ -163,7 +163,8 @@ s32 i2c_smbus_interface::i2c_smbus_write_i2c_block_data(u8 addr, u8 command, u8 
 
 s32 i2c_smbus_interface::i2c_smbus_xfer_call(u8 addr, char read_write, u8 command, int size, i2c_smbus_data* data)
 {
-    i2c_smbus_xfer_mutex.lock();
+    std::unique_lock<std::mutex> lock(i2c_smbus_xfer_mutex, std::defer_lock); // Deferred lock
+    lock.lock(); // Lock it only when necessary
 
     i2c_addr        = addr;
     i2c_read_write  = read_write;
@@ -177,15 +178,13 @@ s32 i2c_smbus_interface::i2c_smbus_xfer_call(u8 addr, char read_write, u8 comman
     i2c_smbus_start_cv.notify_all();
     start_lock.unlock();
 
-    std::unique_lock<std::mutex> done_lock(i2c_smbus_done_mutex);
+    lock.unlock(); // Unlock before waiting
 
+    std::unique_lock<std::mutex> done_lock(i2c_smbus_done_mutex);
     i2c_smbus_done_cv.wait(done_lock, [this]{ return i2c_smbus_done.load(); });
     i2c_smbus_done  = false;
 
-    i2c_smbus_xfer_mutex.unlock();
-
-    return(i2c_ret);
-}
+    return
 
 s32 i2c_smbus_interface::i2c_xfer_call(u8 addr, char read_write, int* size, u8 *data)
 {
@@ -224,30 +223,27 @@ s32 i2c_smbus_interface::i2c_write_block(u8 addr, int size, u8 *data)
 
 void i2c_smbus_interface::i2c_smbus_thread_function()
 {
-    while(1)
+    while(i2c_smbus_thread_running.load())
     {
-        std::unique_lock<std::mutex> start_lock(i2c_smbus_start_mutex);
+        std::vector<std::thread> threads; // Store active threads
 
-        i2c_smbus_start_cv.wait(start_lock, [this]{ return i2c_smbus_start.load(); });
-        i2c_smbus_start = false;
+        {
+            std::unique_lock<std::mutex> start_lock(i2c_smbus_start_mutex);
+            i2c_smbus_start_cv.wait(start_lock, [this]{ return i2c_smbus_start.load(); });
+            i2c_smbus_start = false;
+        }
 
         if (!i2c_smbus_thread_running.load())
-        {
             break;
-        }
 
-        if(smbus_xfer)
-        {
-            i2c_ret = i2c_smbus_xfer(i2c_addr, i2c_read_write, i2c_command, i2c_size_smbus, i2c_data_smbus);
-        }
-        else
-        {
-            i2c_ret = i2c_xfer(i2c_addr, i2c_read_write, i2c_size, i2c_data);
-        }
+        threads.emplace_back([this] {
+            if(smbus_xfer)
+                i2c_ret = i2c_smbus_xfer(i2c_addr, i2c_read_write, i2c_command, i2c_size_smbus, i2c_data_smbus);
+            else
+                i2c_ret = i2c_xfer(i2c_addr, i2c_read_write, i2c_size, i2c_data);
+        });
 
-        std::unique_lock<std::mutex> done_lock(i2c_smbus_done_mutex);
-        i2c_smbus_done  = true;
-        i2c_smbus_done_cv.notify_all();
-        done_lock.unlock();
+        for (auto &t : threads) t.join(); // Wait for all threads
     }
 }
+
