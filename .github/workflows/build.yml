@@ -21,17 +21,11 @@ jobs:
           fetch-depth: 1
 
       - name: Debug: Check repository structure
-        run: |
-          dir
+        run: dir
 
       - name: Install dependencies
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-          choco install ninja
-          choco install mingw
-          choco install qt5-default
-          choco install git
-
+        run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        
       - name: Configure and build OpenRGB
         run: |
           mkdir build
