@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual runs
 
 jobs:
   build:
@@ -20,6 +20,10 @@ jobs:
           submodules: true
           fetch-depth: 1
 
+      - name: Debug: Check repository structure
+        run: |
+          dir
+
       - name: Install dependencies
         run: |
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
@@ -30,7 +34,6 @@ jobs:
 
       - name: Configure and build OpenRGB
         run: |
-          cd OpenRGB  # Make sure we're in the correct folder
           mkdir build
           cd build
           cmake -G "MinGW Makefiles" ..
@@ -40,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: OpenRGB-Windows
-          path: OpenRGB/build/OpenRGB.exe
+          path: build/OpenRGB.exe
