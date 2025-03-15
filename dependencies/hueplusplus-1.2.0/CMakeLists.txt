@@ -87,12 +87,13 @@ if (1 AND APPLE)
 	set(CMAKE_MACOSX_RPATH 1)
 endif()
 
+# Fix paths for mbedtls and nlohmann_json
 if(NOT MbedTLS_FOUND)
 	# Build mbedtls if not installed
 	message(STATUS "MbedTLS was not found, the submodule is used.")
 	set(USE_STATIC_MBEDTLS_LIBRARY ON)
 	set(USE_SHARED_MBEDTLS_LIBRARY OFF)
-	add_subdirectory("lib/mbedtls" EXCLUDE_FROM_ALL)
+	add_subdirectory("dependencies/mbedtls-3.2.1" EXCLUDE_FROM_ALL)
 
 	# Compile the mbedtls library as a static with position independent code,
 	# because we need it for both a shared and static library
@@ -113,7 +114,7 @@ if(NOT nlohmann_json_FOUND)
 	message(STATUS "nlohmann_json was not found, the submodule is used.")
 	# disable tests for json
 	set(JSON_BuildTests OFF CACHE INTERNAL "")
-	add_subdirectory("lib/json" EXCLUDE_FROM_ALL)
+	add_subdirectory("dependencies/json/nlohmann" EXCLUDE_FROM_ALL)
 endif()
 
 add_subdirectory(src)
